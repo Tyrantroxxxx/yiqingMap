@@ -2,7 +2,7 @@
   <div id="app">
     <div id="nav">
       <router-link to="/">累计</router-link>|
-      <router-link to="/about1">现存</router-link>
+      <router-link to="/about">现存</router-link>
     </div>
     <router-view />
   </div>
