@@ -1,8 +1,8 @@
 <template>
   <div class="hello">
     <!-- 初始化echarts 需要一个有宽高的盒子 -->
-    <div ref="mapbox" style="height:500px;width:700px"></div>
-    <div ref="linebox" style="height:500px;width:700px"></div>
+    <div ref="mapbox" style="height:650px;width:1000px" class="box1"></div>
+    <div ref="linebox" style="height:650px;width:1000px" class="box2"></div>
     <router-view></router-view>
   </div>
 </template>
@@ -20,11 +20,11 @@ const colors = ["#5793f3", "#d14a61", "#675bba"];
 const option = {
   title: {
     // 标题
-    text: "Tyrant",
+    text: "TyrantMap",
     link: "https://zhujingyu.com",
     // 副标题
     // ***************修改**************
-    subtext: "OK",
+    subtext: "全国疫情图-数据源于新浪",
     sublink: "https://zhujingyu.com/tyrantOld"
   },
   // 样式设定
@@ -36,13 +36,16 @@ const option = {
         //控制对应地区的汉字
         show: true,
         color: "black", //地区名字体颜色
-        fontSize: 10
+        fontSize: 15
       },
       zoom: 1.25, //控制地图放大缩小系数
       // 全局地图样式
       itemStyle: {
         areaColor: "#fff",
-        borderColor: "#000"
+        borderColor: "#000",
+        shadowColor: "rgba(0, 0, 0, 0.5)",
+        shadowBlur: 10,
+        borderWidth: 2
       },
       // 鼠标滑过的样式设置 （强调设置
       emphasis: {
@@ -52,7 +55,7 @@ const option = {
         },
         label: {
           color: "#fff",
-          fontSize: 12
+          fontSize: 16
         }
       },
       // 用来展示后台给的数据 {name:xx,value:XXX}
@@ -87,12 +90,19 @@ const option = {
         // 图标样式
         symbol: "",
         // 写两个颜色 自动过度 如果是特定颜色 几个分段写几个颜色
-        color: ["#ffc0b1", "#9c0505"]
+        color: ["#ECFCFF", "#B2FCFF", "#5EDFFF", "#3E64FF", "#121B74"]
       },
       itemWidth: 15,
-      itemHeight: 10
+      itemHeight: 10,
+      // tag样式
+      textStyle: {
+        fontSize: 12,
+        fontWeight: 600
+      }
     }
   ],
+  // 位置
+  // bottom: 0,
   // 鼠标经过显示提示
   tooltip: {
     trigger: "item"
@@ -110,7 +120,6 @@ const option = {
     }
   }
 };
-
 const option2 = {
   color: colors,
 
@@ -121,7 +130,7 @@ const option2 = {
     }
   },
   legend: {
-    data: ["现存确诊", "累计确诊"]
+    data: ["现存确诊", "累计确诊", "现存疑似"]
   },
   grid: {
     top: 70,
@@ -161,6 +170,24 @@ const option2 = {
       },
       data: [],
       inverse: true
+    },
+    // 疑似
+    {
+      type: "category",
+      axisTick: {
+        alignWithLabel: true
+      },
+      axisLine: {
+        onZero: false,
+        lineStyle: {
+          color: colors[2]
+        }
+      },
+      axisPointer: {
+        label: {}
+      },
+      data: [],
+      inverse: true
     }
   ],
   yAxis: [
@@ -184,6 +211,15 @@ const option2 = {
       smooth: true,
       data: [],
       inverse: true
+    },
+    // 疑似
+    {
+      name: "现存疑似",
+      type: "line",
+      xAxisIndex: 1,
+      smooth: true,
+      data: [],
+      inverse: true
     }
   ]
 };
@@ -202,7 +238,7 @@ export default {
             console.log(data);
             let list = data.data.list.map(item => ({
               name: item.name,
-              value: item.value
+              value: item.econNum
             }));
             option.series[0].data = list;
             this.mychart.setOption(option);
@@ -223,11 +259,10 @@ export default {
               value: item.date
             }));
             option2.xAxis[0].data = list;
-            this.mychart2.setOption(option2);
+
             // 累计确诊数量
             let list2 = data.data.historylist.map(item => item.cn_conNum * 1);
             option2.series[1].data = list2;
-            this.mychart2.setOption(option2);
 
             // 现存确诊数据获取
             // date
@@ -235,11 +270,21 @@ export default {
               value: item.date
             }));
             option2.xAxis[1].data = list3;
-            this.mychart2.setOption(option2);
 
             // 现存确诊数量
             let list4 = data.data.historylist.map(item => item.cn_econNum * 1);
             option2.series[0].data = list4;
+
+            // 现存疑似
+            // date
+            let list5 = data.data.historylist.map(item => ({
+              value: item.date
+            }));
+            option2.xAxis[2].data = list5;
+            // this.mychart2.setOption(option2);
+            // 现存疑似
+            let list6 = data.data.historylist.map(item => item.cn_susNum * 1);
+            option2.series[2].data = list6;
             this.mychart2.setOption(option2);
           }
         }
@@ -260,8 +305,9 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-h3 {
-  margin: 40px 0 0;
+* {
+  margin: 0;
+  padding: 0;
 }
 ul {
   list-style-type: none;
@@ -271,7 +317,19 @@ li {
   display: inline-block;
   margin: 0 10px;
 }
-a {
-  color: #42b983;
+
+.box2 {
+  margin-top: 50px;
+  margin-left: 50%;
+  transform: translateX(-50%);
+}
+#app {
+  margin: 0;
+  padding: 0;
+}
+.box1 {
+  margin-bottom: 50px;
+  margin-left: 50%;
+  transform: translateX(-50%);
 }
 </style>
